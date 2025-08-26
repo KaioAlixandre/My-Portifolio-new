@@ -1,13 +1,14 @@
-
+// app/page.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 // Tipagem para os projetos do modal
 type Projeto = {
   id: string;
   titulo: string;
-  imagem: string;
+  imagem: string;        // pode ser /img/... (public) ou URL externa (libere em next.config.js se usar URL)
   tecnologias: string[]; // classes de ícones (boxicons/devicon)
   descricaoLonga: string;
   repoLink: string;
@@ -17,7 +18,7 @@ const projetosMap: Record<string, Projeto> = {
   "mk-store": {
     id: "mk-store",
     titulo: "E-commerce Moderno",
-    imagem: "/MK.jpeg",
+    imagem: "/img/MK.jpeg",
     tecnologias: [
       "bx bxl-react",
       "bx bxl-nodejs",
@@ -32,9 +33,14 @@ const projetosMap: Record<string, Projeto> = {
   "task-manager": {
     id: "task-manager",
     titulo: "Simulador de Banco",
-    imagem:
-      "https://via.placeholder.com/800x400/7c3aed/ffffff?text=Task+Manager+Pro",
-    tecnologias: ["bx bxl-java", "bx bxl-typescript", "bx bxl-nodejs", "devicon-mongodb-plain colored"],
+    // Se mantiver URL externa, adicione o domínio em next.config.js -> images.domains
+    imagem: "https://via.placeholder.com/800x400/7c3aed/ffffff?text=Task+Manager+Pro",
+    tecnologias: [
+      "bx bxl-java",
+      "bx bxl-typescript",
+      "bx bxl-nodejs",
+      "devicon-mongodb-plain colored",
+    ],
     descricaoLonga:
       "Um sistema completo de simulação bancária, desenvolvido com foco em reforçar os conceitos fundamentais da programação orientada a objetos (POO) e da arquitetura de sistemas. A aplicação simula o ambiente de um banco real, permitindo o gerenciamento de contas, operações financeiras e controle de transações de forma segura e estruturada.",
     repoLink: "https://github.com/KaioAlixandre/Sistema-Bancario",
@@ -60,9 +66,26 @@ export default function HomePage() {
 
   // Efeito de digitação (Typed.js)
   useEffect(() => {
-    let typedInstance: any;
+    // Tipo mínimo necessário (evita usar "any")
+    interface TypedLike { destroy(): void }
+    type TypedCtor = new (
+      el: string | Element,
+      opts: {
+        strings: string[];
+        typeSpeed?: number;
+        backSpeed?: number;
+        backDelay?: number;
+        loop?: boolean;
+      }
+    ) => TypedLike;
+
+    let typedInstance: TypedLike | null = null;
+    let mounted = true;
+
     (async () => {
-      const { default: Typed } = await import("typed.js");
+      const mod = await import("typed.js");
+      const Typed = (mod.default as unknown) as TypedCtor;
+      if (!mounted) return;
       typedInstance = new Typed(".multiple-text", {
         strings: ["Desenvolvedor", "Designer", "Freelancer", "Criativo"],
         typeSpeed: 100,
@@ -71,16 +94,22 @@ export default function HomePage() {
         loop: true,
       });
     })();
+
     return () => {
-      if (typedInstance) typedInstance.destroy();
+      mounted = false;
+      typedInstance?.destroy();
     };
   }, []);
 
-  // Animação das barras de progresso quando a seção entra em viewport
+  // Animação das barras de progresso quando a seção entra na viewport
   useEffect(() => {
     if (!skillsRef.current) return;
 
-    const options = { threshold: 0.5, rootMargin: "0px 0px -100px 0px" } as IntersectionObserverInit;
+    const options: IntersectionObserverInit = {
+      threshold: 0.5,
+      rootMargin: "0px 0px -100px 0px",
+    };
+
     const obs = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -124,7 +153,7 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Abertura do modal de projetos
+  // Abertura/fechamento do modal de projetos
   const abrirDetalhes = (id: string) => {
     const p = projetosMap[id];
     if (p) {
@@ -132,7 +161,6 @@ export default function HomePage() {
       setModalOpen(true);
     }
   };
-
   const fecharModal = () => {
     setModalOpen(false);
     setSelectedProjeto(null);
@@ -140,6 +168,10 @@ export default function HomePage() {
 
   // Helper para classe "active" do menu
   const isActiveLink = (id: string) => (activeSection === id ? "active" : "");
+
+  // Helper para exibição dos cards de skill
+  const showSkill = (categorias: string) =>
+    activeCategoria === "todos" || categorias.split(" ").includes(activeCategoria);
 
   return (
     <>
@@ -160,32 +192,56 @@ export default function HomePage() {
           </button>
           <ul className={`menu ${menuOpen ? "show" : ""}`} id="menu">
             <li>
-              <a href="#inicio" className={`menu-link ${isActiveLink("inicio")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#inicio"
+                className={`menu-link ${isActiveLink("inicio")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Início
               </a>
             </li>
             <li>
-              <a href="#sobre" className={`menu-link ${isActiveLink("sobre")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#sobre"
+                className={`menu-link ${isActiveLink("sobre")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Sobre
               </a>
             </li>
             <li>
-              <a href="#skills" className={`menu-link ${isActiveLink("skills")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#skills"
+                className={`menu-link ${isActiveLink("skills")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Skills
               </a>
             </li>
             <li>
-              <a href="#projetos" className={`menu-link ${isActiveLink("projetos")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#projetos"
+                className={`menu-link ${isActiveLink("projetos")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Projetos
               </a>
             </li>
             <li>
-              <a href="#servicos" className={`menu-link ${isActiveLink("servicos")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#servicos"
+                className={`menu-link ${isActiveLink("servicos")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Serviços
               </a>
             </li>
             <li>
-              <a href="#contatos" className={`menu-link ${isActiveLink("contatos")}`} onClick={() => setMenuOpen(false)}>
+              <a
+                href="#contatos"
+                className={`menu-link ${isActiveLink("contatos")}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 Contato
               </a>
             </li>
@@ -196,35 +252,45 @@ export default function HomePage() {
       {/* apresentação */}
       <main id="inicio" className="cabecalho">
         <div className="home-img animate__animated animate__zoomIn">
-          <img src="/img/perfil.jpg" alt="foto de perfil" />
+          <Image
+            src="/img/perfil.jpg"
+            alt="Foto de perfil"
+            width={420}
+            height={420}
+            priority
+          />
         </div>
 
         <div className="conteudo-apresentacao">
           <h3 className="animate__animated animate__fadeInUp">Olá, meu nome é</h3>
-          {/* animate.css usa ponto nas frações: 0.5s / 1.5s */}
-          <h1 className="animate__animated animate__fadeInUp animate__delay-0.5s">Kaio Alixandre</h1>
+          {/* animate.css: se usar frações, confira a classe disponível na versão do CDN */}
+          <h1 className="animate__animated animate__fadeInUp animate__delay-1s">Kaio Alixandre</h1>
           <h3 className="animate__animated animate__fadeInUp animate__delay-1s">
             Eu sou <span className="multiple-text" />
           </h3>
-          <p className="animate__animated animate__fadeInUp animate__delay-1.5s">
+          <p className="animate__animated animate__fadeInUp animate__delay-2s">
             Sou um desenvolvedor apaixonado por criar soluções digitais inovadoras e experiências únicas que fazem a diferença.
           </p>
 
           <div className="social-media animate__animated animate__fadeInUp animate__delay-2s">
-            <a href="https://wa.me/5599996458528?text=Ol%C3%A1%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es">
+            <a
+              href="https://wa.me/5599996458528?text=Ol%C3%A1%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               <i className="bx bxl-whatsapp" />
             </a>
-            <a href="https://github.com/KaioAlixandre" target="_blank">
+            <a href="https://github.com/KaioAlixandre" target="_blank" rel="noopener noreferrer">
               <i className="bx bxl-github" />
             </a>
-            <a href="https://www.instagram.com/kaioalixandre/" target="_blank">
+            <a href="https://www.instagram.com/kaioalixandre/" target="_blank" rel="noopener noreferrer">
               <i className="bx bxl-instagram" />
             </a>
-            <a href="mailto:kaioalexandre2681@gmail.com" target="_blank">
+            <a href="mailto:kaioalexandre2681@gmail.com" target="_blank" rel="noopener noreferrer">
               <i className="bx bx-envelope" />
             </a>
           </div>
-          <a href="#projetos" className="btn animate__animated animate__fadeInUp animate__delay-2.5s">
+          <a href="#projetos" className="btn animate__animated animate__fadeInUp animate__delay-2s">
             Veja meus projetos
           </a>
         </div>
@@ -238,7 +304,11 @@ export default function HomePage() {
             Muito prazer, <span className="sobre-titulo-destaque">eu sou Kaio!</span>
           </h2>
           <p className="sobre-texto">
-            Sou um <span style={{ color: "var(--secundaria)", fontWeight: 600 }}>desenvolvedor apaixonado por criar experiências digitais</span> que unem tecnologia, design e propósito. Minha missão é transformar ideias em soluções que encantam e resolvem problemas de verdade.
+            Sou um{" "}
+            <span style={{ color: "var(--secundaria)", fontWeight: 600 }}>
+              desenvolvedor apaixonado por criar experiências digitais
+            </span>{" "}
+            que unem tecnologia, design e propósito. Minha missão é transformar ideias em soluções que encantam e resolvem problemas de verdade.
           </p>
 
           <div className="sobre-tags">
@@ -251,16 +321,20 @@ export default function HomePage() {
 
           <p className="sobre-texto">
             <br />
-            Com experiência em <span style={{ color: "var(--secundaria)", fontWeight: 600 }}>JavaScript, TypeScript, React, Node.js</span> e tecnologias modernas, estou sempre em busca de aprender novas ferramentas e aprimorar minhas habilidades para entregar soluções de qualidade.
+            Com experiência em{" "}
+            <span style={{ color: "var(--secundaria)", fontWeight: 600 }}>
+              JavaScript, TypeScript, React, Node.js
+            </span>{" "}
+            e tecnologias modernas, estou sempre em busca de aprender novas ferramentas e aprimorar minhas habilidades para entregar soluções de qualidade.
           </p>
         </div>
       </section>
 
       {/* conhecimentos e habilidades */}
-      <section id="skills" className="skills" ref={skillsRef as any}>
+      <section id="skills" className="skills" ref={skillsRef}>
         <h2 className="skills-titulo animate__animated animate__fadeInUp">Skills</h2>
 
-        <div className="skills-filtros animate__animated animate__fadeInUp animate__delay-0.5s">
+        <div className="skills-filtros animate__animated animate__fadeInUp animate__delay-1s">
           {[
             { key: "todos", label: "Todos" },
             { key: "backend", label: "Backend" },
@@ -280,11 +354,10 @@ export default function HomePage() {
         </div>
 
         <div className="skills-grade">
-          {/* Cada card mantém o atributo data-categorias para compatibilidade, mas o display é controlado por estado */}
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="frontend"
-            style={{ display: activeCategoria === "todos" || "frontend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("frontend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-react skill-icon" />
@@ -302,7 +375,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="backend"
-            style={{ display: activeCategoria === "todos" || "backend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("backend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-nodejs skill-icon" />
@@ -320,7 +393,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="frontend backend"
-            style={{ display: activeCategoria === "todos" || "frontend backend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("frontend backend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-javascript skill-icon" />
@@ -338,7 +411,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="frontend backend"
-            style={{ display: activeCategoria === "todos" || "frontend backend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("frontend backend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-typescript skill-icon" />
@@ -356,7 +429,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="backend"
-            style={{ display: activeCategoria === "todos" || "backend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("backend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-python skill-icon" />
@@ -374,7 +447,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="banco-de-dados"
-            style={{ display: activeCategoria === "todos" || "banco-de-dados".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("banco-de-dados") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="devicon-postgresql-plain colored skill-icon" />
@@ -392,7 +465,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="banco-de-dados"
-            style={{ display: activeCategoria === "todos" || "banco-de-dados".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("banco-de-dados") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="devicon-mongodb-plain colored skill-icon" />
@@ -410,7 +483,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="ui-ux-design"
-            style={{ display: activeCategoria === "todos" || "ui-ux-design".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("ui-ux-design") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-figma skill-icon" />
@@ -428,7 +501,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="frontend"
-            style={{ display: activeCategoria === "todos" || "frontend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("frontend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-tailwind-css skill-icon" />
@@ -446,7 +519,7 @@ export default function HomePage() {
           <div
             className="skill-card animate__animated animate__zoomIn"
             data-categorias="frontend"
-            style={{ display: activeCategoria === "todos" || "frontend".includes(activeCategoria) ? "flex" : "none" }}
+            style={{ display: showSkill("frontend") ? "flex" : "none" }}
           >
             <div className="skill-header">
               <i className="bx bxl-java skill-icon" />
@@ -463,7 +536,7 @@ export default function HomePage() {
         </div>
 
         <h3 className="skills-subtitulo animate__animated animate__fadeInUp">Habilidades adicionais</h3>
-        <div className="habilidades-adicionais animate__animated animate__fadeInUp animate__delay-0.5s">
+        <div className="habilidades-adicionais animate__animated animate__fadeInUp animate__delay-1s">
           <span className="extra-tag">Git</span>
           <span className="extra-tag">Docker</span>
           <span className="extra-tag">AWS</span>
@@ -481,7 +554,13 @@ export default function HomePage() {
       </h2>
       <section className="projetos-conteudo projetos">
         <div className="sobre-quadro projeto-card animate__animated animate__fadeInUp">
-          <img src="/img/MK.jpeg" alt="MK Store" className="projeto-imagem" />
+          <Image
+            src="/img/MK.jpeg"
+            alt="MK Store"
+            width={1200}
+            height={220}
+            className="projeto-imagem"
+          />
           <div className="projeto-info">
             <h3 className="projeto-card-titulo">MK Strore - Loja Virtual</h3>
             <p className="projeto-card-descricao">
@@ -493,7 +572,12 @@ export default function HomePage() {
               <i className="bx bxl-javascript projeto-tech-icon" title="JavaScript" />
             </div>
             <div className="projeto-botoes">
-              <a href="https://mk-racoes.vercel.app/" target="_blank" className="btn-projeto ver-projeto">
+              <a
+                href="https://mk-racoes.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-projeto ver-projeto"
+              >
                 Ver Projeto
               </a>
               <button className="btn-projeto detalhes" onClick={() => abrirDetalhes("mk-store")}>
@@ -504,7 +588,13 @@ export default function HomePage() {
         </div>
 
         <div className="sobre-quadro projeto-card animate__animated animate__fadeInUp">
-          <img src="/img/BC.png" alt="Simulador de Banco" className="projeto-imagem" />
+          <Image
+            src="/img/BC.png"
+            alt="Simulador de Banco"
+            width={1200}
+            height={220}
+            className="projeto-imagem"
+          />
           <div className="projeto-info">
             <h3 className="projeto-card-titulo">Simulador de Banco</h3>
             <p className="projeto-card-descricao">
@@ -517,6 +607,7 @@ export default function HomePage() {
               <a
                 href="https://github.com/KaioAlixandre/Sistema-Bancario"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="btn-projeto ver-projeto"
               >
                 Ver Projeto
@@ -530,20 +621,49 @@ export default function HomePage() {
       </section>
 
       {/* Modal de detalhes dos projetos */}
-      <div id="projeto-modal" className={`modal ${modalOpen ? "active" : ""}`} onClick={(e) => e.target === e.currentTarget && fecharModal()}>
+      <div
+        id="projeto-modal"
+        className={`modal ${modalOpen ? "active" : ""}`}
+        onClick={(e) => e.target === e.currentTarget && fecharModal()}
+      >
         <div className="modal-content">
-          <button className="fechar-modal" onClick={fecharModal} aria-label="Fechar">&times;</button>
-          <img id="modal-imagem" src={selectedProjeto?.imagem || "/placeholder.svg"} alt="Imagem do Projeto" className="modal-imagem" />
-          <h3 id="modal-titulo" className="modal-titulo">{selectedProjeto?.titulo}</h3>
+          <button className="fechar-modal" onClick={fecharModal} aria-label="Fechar">
+            &times;
+          </button>
+
+          {/* Imagem do modal */}
+          <Image
+            id="modal-imagem"
+            src={selectedProjeto?.imagem || "/img/placeholder.svg"}
+            alt={selectedProjeto?.titulo || "Imagem do Projeto"}
+            width={800}
+            height={400}
+            className="modal-imagem"
+          />
+
+          <h3 id="modal-titulo" className="modal-titulo">
+            {selectedProjeto?.titulo}
+          </h3>
+
           <div className="modal-tecnologias" id="modal-tecnologias">
             {selectedProjeto?.tecnologias.map((t) => (
               <i key={t} className={`${t} projeto-tech-icon`} />
             ))}
           </div>
-          <p id="modal-descricao-longa" className="modal-descricao-longa">{selectedProjeto?.descricaoLonga}</p>
+
+          <p id="modal-descricao-longa" className="modal-descricao-longa">
+            {selectedProjeto?.descricaoLonga}
+          </p>
+
           <div className="modal-links">
             {selectedProjeto?.repoLink && (
-              <a id="modal-repo-link" href={selectedProjeto.repoLink} target="_blank" className="btn-modal">
+              <a
+                id="modal-repo-link"
+                href={selectedProjeto.repoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-modal"
+              >
                 Ver no GitHub
               </a>
             )}
@@ -558,17 +678,23 @@ export default function HomePage() {
           <div className="servico animate__animated animate__zoomIn">
             <i className="bx bx-code-alt servicos-icon" title="Desenvolvimento Web" />
             <h3 className="servicos-titulo">Desenvolvimento Web</h3>
-            <p className="servicos-descricao">Criação de sites e aplicações web modernas, responsivas e otimizadas para performance e SEO.</p>
+            <p className="servicos-descricao">
+              Criação de sites e aplicações web modernas, responsivas e otimizadas para performance e SEO.
+            </p>
           </div>
           <div className="servico animate__animated animate__zoomIn">
             <i className="bx bx-mobile-alt servicos-icon" title="Desenvolvimento Mobile" />
             <h3 className="servicos-titulo">Desenvolvimento Mobile</h3>
-            <p className="servicos-descricao">Desenvolvimento de aplicativos móveis nativos e híbridos para iOS e Android.</p>
+            <p className="servicos-descricao">
+              Desenvolvimento de aplicativos móveis nativos e híbridos para iOS e Android.
+            </p>
           </div>
           <div className="servico animate__animated animate__zoomIn">
             <i className="bx bx-palette servicos-icon" title="UI/UX Design" />
             <h3 className="servicos-titulo">UI/UX Design</h3>
-            <p className="servicos-descricao">Design de interfaces intuitivas e experiências de usuário que convertem e encantam.</p>
+            <p className="servicos-descricao">
+              Design de interfaces intuitivas e experiências de usuário que convertem e encantam.
+            </p>
           </div>
         </div>
       </section>
@@ -576,22 +702,47 @@ export default function HomePage() {
       {/* contato */}
       <section id="contatos" className="contatos">
         <h2 className="contatos-titulo animate__animated animate__fadeInUp">Contato</h2>
-        <div className="contatos-conteudo animate__animated animate__fadeInUp animate__delay-0.5s">
+        <div className="contatos-conteudo animate__animated animate__fadeInUp animate__delay-1s">
           <p className="contatos-texto">Vamos trabalhar juntos? Entre em contato comigo:</p>
           <div className="contatos-sociais">
-            <a href="https://www.linkedin.com/in/kaio/" target="_blank" className="contato-link">
+            <a
+              href="https://www.linkedin.com/in/kaio/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contato-link"
+            >
               <i className="bx bxl-linkedin" /> LinkedIn
             </a>
-            <a href="https://github.com/KaioAlixandre" target="_blank" className="contato-link">
+            <a
+              href="https://github.com/KaioAlixandre"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contato-link"
+            >
               <i className="bx bxl-github" /> GitHub
             </a>
-            <a href="https://wa.me/5599996458528?text=Ol%C3%A1%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es" target="_blank" className="contato-link">
+            <a
+              href="https://wa.me/5599996458528?text=Ol%C3%A1%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contato-link"
+            >
               <i className="bx bxl-whatsapp" /> WhatsApp
             </a>
-            <a href="https://www.instagram.com/kaioalixandre/" target="_blank" className="contato-link">
+            <a
+              href="https://www.instagram.com/kaioalixandre/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contato-link"
+            >
               <i className="bx bxl-instagram" /> Instagram
             </a>
-            <a href="mailto:kaioalexandre2681@gmail.com" target="_blank" className="contato-link">
+            <a
+              href="mailto:kaioalexandre2681@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contato-link"
+            >
               <i className="bx bx-envelope" /> E-mail
             </a>
           </div>
