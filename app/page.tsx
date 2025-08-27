@@ -580,9 +580,6 @@ export default function HomePage() {
               >
                 Ver Projeto
               </a>
-              <button className="btn-projeto detalhes" onClick={() => abrirDetalhes("mk-store")}>
-                Detalhes
-              </button>
             </div>
           </div>
         </div>
@@ -612,9 +609,6 @@ export default function HomePage() {
               >
                 Ver Projeto
               </a>
-              <button className="btn-projeto detalhes" onClick={() => abrirDetalhes("task-manager")}>
-                Detalhes
-              </button>
             </div>
           </div>
         </div>
