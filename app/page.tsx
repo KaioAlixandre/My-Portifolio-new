@@ -612,6 +612,41 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        <div className="sobre-quadro projeto-card animate__animated animate__fadeInUp">
+          <Image
+            src="/img/evento.png"
+            alt="Event List"
+            width={1200}
+            height={220}
+            className="projeto-imagem"
+          />
+          <div className="projeto-info">
+            <h3 className="projeto-card-titulo">Gerenciador de eventos</h3>
+            <p className="projeto-card-descricao">
+              O EventList é uma aplicação web full-stack desenvolvida para gerenciar eventos pessoais de forma simples e intuitiva.
+              Com login seguro via JWT e uma interface responsiva construída em TailwindCSS, o sistema permite que usuários criem, editem, visualizem e excluam eventos, além de acompanhar uma contagem regressiva personalizada para cada um.
+
+              Essa aplicação foi desenvolvida com Spring Boot no backend e HTML, CSS e JavaScript no frontend, unindo segurança, performance e uma experiência de uso moderna.
+            </p>
+            <div className="projeto-tecnologias">
+              <i className="bx bxl-java projeto-tech-icon" title="Java" />
+              <i className="bx bxl-html5 projeto-tech-icon" title="HTML5" />
+              <i className="bx bxl-css3 projeto-tech-icon" title="CSS3" />
+              <i className="bx bxl-javascript projeto-tech-icon" title="JavaScript" />
+            </div>
+            <div className="projeto-botoes">
+              <a
+                href="https://github.com/KaioAlixandre/Event-list"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-projeto ver-projeto"
+              >
+                Ver Projeto
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Modal de detalhes dos projetos */}
